@@ -89,7 +89,7 @@ int main (int argc, char** argv){
 	double* vecteur1;
 	double* vecteur2;
 	double*  matrice;
-	double*  matrice_vecteur;
+	// double*  matrice_vecteur;
 	int i,j;
 
 	struct timeval debut_calcul, fin_calcul, duree_calcul;
@@ -119,6 +119,12 @@ int main (int argc, char** argv){
 	printf("Matrice\n");
 	// affiche(matrice, nb_ligne*nb_col, nb_col);
 
+
+
+	//---------------------------------------------------------------------------------------------//
+
+	// En sequentiel
+
 	// printf("\nProduit scalaire de vecteur1 par vecteur2 : %f\n", produit_scalaire(vecteur1, vecteur2, nb_ligne));
 	gettimeofday(&debut_calcul, NULL);
 	for (int i = 0; i < 100; ++i)
@@ -141,6 +147,33 @@ int main (int argc, char** argv){
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
 	printf("Temps matrice vecteur sequentiel : %f s\n", (double) (duree_calcul.tv_sec) + (duree_calcul.tv_usec / 1000000.0));
+
+
+	//---------------------------------------------------------------------------------------------//
+
+	// En parallele
+
+	gettimeofday(&debut_calcul, NULL);
+	for (int i = 0; i < 100; ++i)
+	{
+		produit_scalaire_parralle(vecteur1, vecteur2, nb_ligne);
+	}
+	gettimeofday(&fin_calcul, NULL);
+	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
+	printf("Temps produit scalaire parallèle : %f s\n", (double) (duree_calcul.tv_sec) + (duree_calcul.tv_usec / 1000000.0));
+
+
+	// printf("\nProduit de matrice par vecteur1 : \n");
+	// matrice_vecteur = produit_matrice_vecteur(matrice, vecteur1, nb_ligne, nb_col);
+	// affiche(matrice_vecteur, nb_ligne, 1);
+	gettimeofday(&debut_calcul, NULL);
+	for (int i = 0; i < 100; ++i)
+	{
+		produit_matrice_vecteur_parrallele(matrice, vecteur1, nb_ligne, nb_col);
+	}
+	gettimeofday(&fin_calcul, NULL);
+	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
+	printf("Temps matrice vecteur parallèle : %f s\n", (double) (duree_calcul.tv_sec) + (duree_calcul.tv_usec / 1000000.0));
 
 
 	free(vecteur1);
