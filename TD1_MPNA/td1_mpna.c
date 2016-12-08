@@ -40,7 +40,8 @@ double produit_scalaire_parralle (double* vecteur1, double* vecteur2, int taille
 	int i;
 	produit_scalaire = 0;
 
-
+	#pragma omp parallel private(i) shared(vecteur1, vecteur2, taille_vecteur)
+	#pragma omp for
 	for(i=0; i<taille_vecteur; i++){
 		produit_scalaire += vecteur1[i] * vecteur2[i];
 	}
@@ -55,6 +56,21 @@ double* produit_matrice_vecteur (double* matrice, double* vecteur, int nb_ligne,
 
 	resultat = (double*) malloc(nb_ligne*sizeof(double));
 
+	for(i=0; i<nb_ligne; i++){
+		resultat[i] = produit_scalaire(matrice+(i*nb_col), vecteur, nb_col);
+	}
+
+	return resultat;
+}
+
+double* produit_matrice_vecteur_parrallele (double* matrice, double* vecteur, int nb_ligne, int nb_col){
+	double* resultat;
+	int i;
+
+	resultat = (double*) malloc(nb_ligne*sizeof(double));
+
+	#pragma omp parallel private(i) shared(matrice, vecteur, nb_ligne, nb_col)
+	#pragma omp for
 	for(i=0; i<nb_ligne; i++){
 		resultat[i] = produit_scalaire(matrice+(i*nb_col), vecteur, nb_col);
 	}
@@ -84,6 +100,7 @@ int main (int argc, char** argv){
 	vecteur1 = (double*) malloc(nb_ligne*sizeof(double));
 	vecteur2 = (double*) malloc(nb_ligne*sizeof(double));
 	matrice  = (double*) malloc(nb_ligne*nb_col*sizeof(double));
+	printf("Nombres de mega-octets alloués %d \n", nb_ligne*nb_col*sizeof(double)/1000000);
 
 	//Initialisation
 	for(i=0; i<nb_ligne; i++){
@@ -104,20 +121,26 @@ int main (int argc, char** argv){
 
 	// printf("\nProduit scalaire de vecteur1 par vecteur2 : %f\n", produit_scalaire(vecteur1, vecteur2, nb_ligne));
 	gettimeofday(&debut_calcul, NULL);
-	produit_scalaire(vecteur1, vecteur2, nb_ligne);
+	for (int i = 0; i < 100; ++i)
+	{
+		produit_scalaire(vecteur1, vecteur2, nb_ligne);
+	}
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
-	printf("Temps produit scalaire sequentiel : %ld.%ld s\n",(long int)duree_calcul.tv_sec,(long int)duree_calcul.tv_usec);
+	printf("Temps produit scalaire sequentiel : %f s\n", (double) (duree_calcul.tv_sec) + (duree_calcul.tv_usec / 1000000.0));
 
 
 	// printf("\nProduit de matrice par vecteur1 : \n");
 	// matrice_vecteur = produit_matrice_vecteur(matrice, vecteur1, nb_ligne, nb_col);
 	// affiche(matrice_vecteur, nb_ligne, 1);
 	gettimeofday(&debut_calcul, NULL);
-	produit_matrice_vecteur(matrice, vecteur1, nb_ligne, nb_col);
+	for (int i = 0; i < 100; ++i)
+	{
+		produit_matrice_vecteur(matrice, vecteur1, nb_ligne, nb_col);
+	}
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
-	printf("Temps matrice vecteur sequentiel : %ld.%ld s\n",(long int)duree_calcul.tv_sec,(long int)duree_calcul.tv_usec);
+	printf("Temps matrice vecteur sequentiel : %f s\n", (double) (duree_calcul.tv_sec) + (duree_calcul.tv_usec / 1000000.0));
 
 
 	free(vecteur1);
