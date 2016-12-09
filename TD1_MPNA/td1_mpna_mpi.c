@@ -144,7 +144,7 @@ int main (int argc, char** argv){
 	gettimeofday(&debut_calcul, NULL);
 	for (int i = 0; i < 100; ++i)
 	{
-		// produit_scalaire_parralle(vecteur1, vecteur2, nb_ligne, debut, fin);
+		produit_scalaire_parralle(vecteur1, vecteur2, nb_ligne, debut, fin);
 	}
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
@@ -157,7 +157,7 @@ int main (int argc, char** argv){
 	gettimeofday(&debut_calcul, NULL);
 	for (int i = 0; i < 100; ++i)
 	{
-		// produit_matrice_vecteur_parrallele(matrice, vecteur1, nb_ligne, nb_col, debut, fin);
+		produit_matrice_vecteur_parrallele(matrice, vecteur1, nb_ligne, nb_col, debut, fin);
 	}
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
