@@ -1,8 +1,14 @@
 
-all : td1_mpna.pgr
+all : td1_mpna.pgr td1_mpna_mpi.pgr
+
+FLAGS=-g -Wall
+
 
 td1_mpna.pgr : td1_mpna.c
-	gcc $^ -g -fopenmp -Wall -o $@
+	gcc $^ $(FLAGS) -fopenmp -o $@
+
+td1_mpna_mpi.pgr : td1_mpna_mpi.c
+	mpicc $^ $(FLAGS) -o $@
 
 clean : 
 	rm -rf *.pgr
