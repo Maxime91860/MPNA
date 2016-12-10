@@ -60,7 +60,6 @@ void produit_scalaire_parallele (double* vecteur1, double* vecteur2, int taille_
 	}
 
 	MPI_Allreduce (produit_scalaire, produit_scalaire, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
 }
 
 void produit_matrice_vecteur_parallele (double* matrice, double* vecteur, int nb_ligne, int nbligne_process, int nb_col, double* PMV){
@@ -69,26 +68,15 @@ void produit_matrice_vecteur_parallele (double* matrice, double* vecteur, int nb
 	int id_process;
 	MPI_Comm_rank(MPI_COMM_WORLD,&id_process);
 
-	resultat = (double*) malloc(nb_ligne*sizeof(double));
-
-	if(id_process != 0){
-			printf("Process %d Vecteur = \n", id_process);
-			affiche(vecteur, nb_ligne, nb_ligne);
-			printf("\n");
-	}	
+	resultat = (double*) malloc(nbligne_process*sizeof(double));
 
 	for(i=0; i<nbligne_process; i++){
 		resultat[i] = produit_scalaire(matrice+(i*nb_col), vecteur, nb_col);
-		if(id_process != 0){
-			printf("Ligne matrice = \n");
-			affiche(matrice+(i*nb_col), nb_col, nb_col);
-			printf("Vecteur =\n");
-			affiche(vecteur, nb_ligne, nb_ligne);
-			printf("resultat[%d] = %f\n", i, resultat[i] );
-		}
 	}
 
-	MPI_Gather(resultat, nb_ligne, MPI_DOUBLE, PMV, nb_ligne, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+	MPI_Gather(resultat, nbligne_process, MPI_DOUBLE, PMV, nbligne_process, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	free(resultat);
 }
 
 int main (int argc, char** argv){
@@ -165,20 +153,20 @@ int main (int argc, char** argv){
 
 
 	//Affichage des des données de chaque processus
-	for(i=0; i<size; i++){
-		if(i==rank){
-			printf("Rang : %d\n",rank);
-			printf("\tdebut = %d, fin = %d\n",debut,fin);
-			printf("\tVecteur1\n");
-			affiche(vecteur1, nbligne_process , nbligne_process);
-			printf("\tVecteur2\n");
-			affiche(vecteur2, nbligne_process, nbligne_process);
-			affiche(matrice, nbligne_process*nb_col, nb_col);
-			printf("\n");
-		}
-		MPI_Barrier(MPI_COMM_WORLD);
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
+	// for(i=0; i<size; i++){
+	// 	if(i==rank){
+	// 		printf("Rang : %d\n",rank);
+	// 		printf("\tdebut = %d, fin = %d\n",debut,fin);
+	// 		printf("\tVecteur1\n");
+	// 		affiche(vecteur1, nbligne_process , nbligne_process);
+	// 		printf("\tVecteur2\n");
+	// 		affiche(vecteur2, nbligne_process, nbligne_process);
+	// 		affiche(matrice, nbligne_process*nb_col, nb_col);
+	// 		printf("\n");
+	// 	}
+	// 	MPI_Barrier(MPI_COMM_WORLD);
+	// }
+	// MPI_Barrier(MPI_COMM_WORLD);
 
 
 	//Le processus 0 récupère les données 
@@ -187,15 +175,15 @@ int main (int argc, char** argv){
 	MPI_Gather(matrice, nbligne_process*nb_col, MPI_DOUBLE, matrice_complete, nbligne_process*nb_col, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	//Affichage des données récupérées par le processus 0
-	// if(rank == 0){
-	// 	printf("Vecteur1 complet\n");
-	// 	affiche(vecteur1_complet, nb_ligne, nb_ligne);
-	// 	printf("Vecteur2 complet\n");
-	// 	affiche(vecteur2_complet, nb_ligne, nb_ligne);
-	// 	printf("Matice complete\n");
-	// 	affiche(matrice_complete, nb_ligne*nb_col, nb_col);
-	// }
-	// MPI_Barrier(MPI_COMM_WORLD);
+	if(rank == 0){
+		printf("Vecteur1 complet\n");
+		affiche(vecteur1_complet, nb_ligne, nb_ligne);
+		printf("Vecteur2 complet\n");
+		affiche(vecteur2_complet, nb_ligne, nb_ligne);
+		printf("Matice complete\n");
+		affiche(matrice_complete, nb_ligne*nb_col, nb_col);
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
 
 
   	//---------------------------------------------------------------------------------------------//
@@ -205,30 +193,31 @@ int main (int argc, char** argv){
 	/* ******************************* */
 	//	 	 PRODUIT SCALAIRE 			/
 	/* ******************************* */
-	// double resultat;
-	// double resultat_seq = 0;
+	double resultat;
+	double resultat_seq = 0;
 
-	// t1 = MPI_Wtime();
-	// for (i = 0; i < 1000; ++i)
-	// {
-	// 	produit_scalaire_parallele(vecteur1, vecteur2, nbligne_process, &resultat);
-	// }
-	// t2 = MPI_Wtime();
+	t1 = MPI_Wtime();
+	for (i = 0; i < 1000; ++i)
+	{
+		produit_scalaire_parallele(vecteur1, vecteur2, nbligne_process, &resultat);
+	}
+	t2 = MPI_Wtime();
 
-	// if(rank == 0){
-	// 	printf("\nTemps produit scalaire parallèle : %f s\n", t2-t1);
-	// 	t1 = MPI_Wtime();
-	// 	for (i = 0; i < 1000; ++i)
-	// 	{
-	// 		produit_scalaire(vecteur1_complet , vecteur2_complet, nb_ligne);
-	// 	}
-	// 	t2 = MPI_Wtime();
-	// 	resultat_seq = produit_scalaire(vecteur1_complet , vecteur2_complet, nb_ligne);
-	// 	printf("\tResultat parallèle = %f\n",resultat);
-	// 	printf("Temps produit scalaire séquentiel : %f s\n", t2-t1);
-	// 	printf("\tResultat séquentiel = %f\n",resultat_seq);
+	if(rank == 0){
+		printf("\n --- Produit scalaire vecteur1 * vecteur2 --- \n");
+		printf("\nTemps produit scalaire parallèle : %f s\n", t2-t1);
+		t1 = MPI_Wtime();
+		for (i = 0; i < 1000; ++i)
+		{
+			produit_scalaire(vecteur1_complet , vecteur2_complet, nb_ligne);
+		}
+		t2 = MPI_Wtime();
+		resultat_seq = produit_scalaire(vecteur1_complet , vecteur2_complet, nb_ligne);
+		printf("\tResultat parallèle = %f\n",resultat);
+		printf("Temps produit scalaire séquentiel : %f s\n", t2-t1);
+		printf("\tResultat séquentiel = %f\n",resultat_seq);
 		
-	// }
+	}
 
 
 	/* ******************************* */
@@ -252,26 +241,27 @@ int main (int argc, char** argv){
 	}
 
 	t1 = MPI_Wtime();
-	// for (i = 0; i < 1000; ++i)
-	// {
-		// produit_matrice_vecteur_parallele(matrice, vecteur1_complet, nb_ligne, nbligne_process, nb_col, PMV_par);
-	// }
+	for (i = 0; i < 1000; ++i)
+	{
+		produit_matrice_vecteur_parallele(matrice, vecteur1_complet, nb_ligne, nbligne_process, nb_col, PMV_par);
+	}
 	t2 = MPI_Wtime();
 
-	// if(rank == 0){
-	// 	printf("\nTemps PMV parallèle : %f s\n", t2-t1);
-	// 	t1 = MPI_Wtime();
-	// 	for (i = 0; i < 1000; ++i)
-	// 	{
-	// 		produit_matrice_vecteur (matrice_complete, vecteur1_complet, nb_ligne, nb_col, PMV_seq);
-	// 	}
-	// 	t2 = MPI_Wtime();
-	// 	printf("\tResultat PMV parallèle =\n");
-	// 	affiche(PMV_par, nb_ligne, nb_ligne);
-	// 	printf("Temps PMV séquentiel : %f s\n", t2-t1);
-	// 	printf("\tResultat PMV séquentiel = \n");
-	// 	affiche(PMV_seq, nb_ligne, nb_ligne);
-	// }
+	if(rank == 0){
+		printf("\n --- Produit Matrice Vecteur : matrice * vecteur1 ---\n");
+		printf("\nTemps PMV parallèle : %f s\n", t2-t1);
+		t1 = MPI_Wtime();
+		for (i = 0; i < 1000; ++i)
+		{
+			produit_matrice_vecteur (matrice_complete, vecteur1_complet, nb_ligne, nb_col, PMV_seq);
+		}
+		t2 = MPI_Wtime();
+		printf("\tResultat PMV parallèle =\n");
+		affiche(PMV_par, nb_ligne, nb_ligne);
+		printf("Temps PMV séquentiel : %f s\n", t2-t1);
+		printf("\tResultat PMV séquentiel = \n");
+		affiche(PMV_seq, nb_ligne, nb_ligne);
+	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
