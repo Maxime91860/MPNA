@@ -57,7 +57,7 @@ int i;
 double *resultat=(double *)malloc(nb_lignes*sizeof(double));
 
 for(i=0; i<nb_lignes; i++){
-	resultat[i]+=produit_scalaire(matrice+(i*nb_colonnes),vecteur1, nb_colonnes);
+	resultat[i]=produit_scalaire(matrice+(i*nb_colonnes),vecteur1, nb_colonnes);
 }
 return resultat;
 }
@@ -72,7 +72,7 @@ double *resultat=(double *)malloc(nb_lignes*nb_colonnes*sizeof(double));
 #pragma omp parallel private(i) shared(matrice, vecteur1, nb_lignes, nb_colonnes)
 #pragma omp for
 for(i=0; i<nb_lignes; i++){
-	resultat[i]+=produit_scalaire_parallel(matrice+i*nb_colonnes, vecteur1, nb_colonnes);
+	resultat[i]=produit_scalaire_parallel(matrice+i*nb_colonnes, vecteur1, nb_colonnes);
 }
 return resultat;
 }
