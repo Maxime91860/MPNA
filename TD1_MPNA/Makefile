@@ -1,7 +1,7 @@
 
 all : td1_mpna.pgr td1_mpna_mpi.pgr
 
-FLAGS=-g -Wall
+FLAGS=-g
 
 
 td1_mpna.pgr : td1_mpna.c
