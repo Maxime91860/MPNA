@@ -146,7 +146,7 @@ int main(int argc, char **argv){
 	produit_scalaire_parallel(vecteur1, vecteur2, nb_lignes);
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
-	printf("temps d'execution du produit scalaire en parallel: %fs\n", (double) (duree_calcul.tv_sec)			+(duree_calcul.tv_usec) /1000000.0);
+	printf("temps d'execution du produit scalaire en parallel: %fs\n", (double) (duree_calcul.tv_sec)+(duree_calcul.tv_usec) /1000000.0);
 
 
 
