@@ -177,11 +177,11 @@ int main (int argc, char** argv){
 	//Affichage des données récupérées par le processus 0
 	if(rank == 0){
 		printf("Vecteur1 complet\n");
-		affiche(vecteur1_complet, nb_ligne, nb_ligne);
+		//affiche(vecteur1_complet, nb_ligne, nb_ligne);
 		printf("Vecteur2 complet\n");
-		affiche(vecteur2_complet, nb_ligne, nb_ligne);
+		//affiche(vecteur2_complet, nb_ligne, nb_ligne);
 		printf("Matice complete\n");
-		affiche(matrice_complete, nb_ligne*nb_col, nb_col);
+		//affiche(matrice_complete, nb_ligne*nb_col, nb_col);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 
@@ -257,10 +257,10 @@ int main (int argc, char** argv){
 		}
 		t2 = MPI_Wtime();
 		printf("\tResultat PMV parallèle =\n");
-		affiche(PMV_par, nb_ligne, nb_ligne);
+		//affiche(PMV_par, nb_ligne, nb_ligne);
 		printf("Temps PMV séquentiel : %f s\n", t2-t1);
 		printf("\tResultat PMV séquentiel = \n");
-		affiche(PMV_seq, nb_ligne, nb_ligne);
+		//affiche(PMV_seq, nb_ligne, nb_ligne);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);

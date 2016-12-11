@@ -77,7 +77,6 @@ double *produit_matrice_vecteur_parallel(double *matrice, double *vecteur1, int 
 		resultat[i]=produit_scalaire_parallel(matrice+(i*nb_colonnes), vecteur1, nb_colonnes);
 	}
 	return resultat;
-	free(resultat);
 }
 
 

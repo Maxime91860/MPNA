@@ -9,7 +9,7 @@ MATVEC.pgr:MATVEC.c
 MATVEC_mpi.pgr: MATVEC_mpi.c
 	mpicc $^ $(FLAGS) -o $@
 exec:MATVEC_mpi.pgr
-	mpirun -np 2 ./$^ 4 4
+	mpirun -np 4 ./$^ 12 12 
 
 make clean:
 	rm -rf *.pgr

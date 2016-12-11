@@ -51,7 +51,7 @@ double produit_scalaire_parallel(double *vecteur1, double *vecteur2, int taille)
 
 
 //PRODUIT MATRICE VECTEUR SEQUENTIEL
-double *produit_matrice_vecteur(double *matrice, double *vecteur1, int nb_lignes, int nb_colonnes){
+double *produit_matrice_vecteur_sequentiel(double *matrice, double *vecteur1, int nb_lignes, int nb_colonnes){
 
 	int i;
 	double *resultat=(double *)malloc(nb_lignes*sizeof(double));
@@ -60,8 +60,23 @@ double *produit_matrice_vecteur(double *matrice, double *vecteur1, int nb_lignes
 		resultat[i]=produit_scalaire_parallel(matrice+(i*nb_colonnes),vecteur1, nb_colonnes);
 	}
 	return resultat;
+
+	free(resultat);
 }
 
+//PRODUIT MATRICE VECTEUR PARALLEL
+void produit_matrice_vecteur_parallel(double *matrice, double *vecteur1, int nb_lignes, int nb_colonnes, int nb_lignes_process, double *MATVEC_PARAL){
+
+	int i;
+	double *resultat=(double *)malloc(nb_lignes*sizeof(double));
+
+	for(i=0; i<nb_lignes; i++){
+		resultat[i]=produit_scalaire_parallel(matrice+(i*nb_colonnes),vecteur1, nb_colonnes);
+	}
+	MPI_Gather(resultat, nb_lignes_process, MPI_DOUBLE, MATVEC_PARAL, nb_lignes_process, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	
+	free(resultat);
+}
 
 
 //MAIN
@@ -107,7 +122,7 @@ int main(int argc, char **argv){
 			ifin = ideb + Q - 1;
 		}
 
-
+	//NOMBRE DE LIGNES DEDIÉES A CHAQUE PROCESSUS
 	int nb_lignes_process=ifin-ideb+1;
 
 	if(rank==0){
@@ -117,24 +132,25 @@ int main(int argc, char **argv){
 	}
 
 	//TOUS LES PROCS ALLOUENT ET INITIALISENT LES VECTEURS ET LA MATRICE
-
 	vecteur1=(double *)malloc(nb_lignes_process*sizeof(double));
 	vecteur2=(double *)malloc(nb_lignes_process*sizeof(double));
 	matrice=(double *)malloc((nb_lignes_process*nb_colonnes)*sizeof(double));
 
 	for(i=0; i<nb_lignes_process; i++){
-		vecteur1[i]=2;
-		vecteur2[i]=3;
+		vecteur1[i]= 100;
+		vecteur2[i]= 200;
 
 		for(j=0; j<nb_colonnes; j++){
-		matrice[j+(i*nb_colonnes)]=2;		
+		matrice[j+(i*nb_colonnes)]= 300;		
 		}
 	}
 
+//REGROUPEMENT DE TOUTES LES PARTIES QUE DETIENT CHAQUE PROCESSUS DANS DES VECTEURS COMPLETS ET MATRICE COMPLETE DANS LE PROCESSUS DE RANG 0
 	MPI_Gather(vecteur1, nb_lignes_process, MPI_DOUBLE, vecteur1_complet, nb_lignes_process, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Gather(vecteur2, nb_lignes_process, MPI_DOUBLE, vecteur2_complet, nb_lignes_process, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	MPI_Gather(matrice, nb_lignes_process*nb_colonnes, MPI_DOUBLE, matrice_complete, nb_lignes_process*nb_colonnes, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	
+//LE RANG 0 AFFICHE LES DEUX VECTEURS COMPLETS ET LA MATRICE COMPLETE RECCUPÉRÉS DES AUTRES PROCESSUS AVEC LE MPI_Gather
 	if(rank==0){
 	printf("vecteur1_complet\n");
 	affiche(vecteur1_complet, nb_lignes, nb_lignes);
@@ -145,9 +161,27 @@ int main(int argc, char **argv){
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	int t1, t2;
+//CHAQUE PROCESSUS AFFICHE LES PARTIES DE VECTEURS ET MATRICE QU'IL POSSEDE
+	for(i=0; i<size; i++){
+	 	
+	 	printf("Rang : %d debut : %d fin : %d \n",rank,ideb,ifin);
+	 	printf("\tvecteur1\n");
+	 	affiche(vecteur1, nb_lignes_process, nb_lignes_process);
+	 	printf("\tvecteur2\n");
+	 	affiche(vecteur2, nb_lignes_process, nb_lignes_process);		
+		printf("\tmatrice\n");
+		affiche(matrice, nb_lignes_process*nb_colonnes, nb_lignes_process); 
+	 }
+		MPI_Barrier(MPI_COMM_WORLD);
+	
+
+	double t1, t2, t3, t4, t5, t6;
 	double resultat_parallel, resultat_sequentiel;
 
+
+//////////PRODUIT SCALAIRE PARALLEL//////////
+
+	//COMPLEXITE EN TEMPS POUR LE PRODUIT SCALAIRE EN PARALLEL
 	t1=MPI_Wtime();
 	resultat_parallel=produit_scalaire_parallel(vecteur1, vecteur2, nb_lignes_process);	
 	t2=MPI_Wtime();
@@ -155,30 +189,47 @@ int main(int argc, char **argv){
 	
 	if(rank==0){
 		resultat_sequentiel=produit_scalaire_sequentiel(vecteur1_complet, vecteur2_complet, nb_lignes);
-		printf("\tResultat sequentiel=%f\n",resultat_sequentiel);
-		printf("\tResultat_parallel= %f\n",resultat_parallel);
-		printf("le temps d'execution du produit scalaire en parallel est: %d\n", t2-t1);
+		printf("\tResultat_sequentiel_produit_scalaire=%f\n",resultat_sequentiel);
+		printf("\tResultat_parallel_produit_scalaire= %f\n",resultat_parallel);
+		printf("le temps d'execution du produit scalaire en parallel est: %f\n", t2-t1);
 	}
 	
 
-	/*
-	printf("vecteur1\n");
-	affiche(vecteur1, nb_lignes, nb_lignes);
+//////////PRODUIT MATRICE VECTEUR PARALLEL//////////
 
-	printf("vecteur2\n");
-	affiche(vecteur2, nb_lignes, nb_lignes);
+	if(rank != 0){
+	double *vecteur1_complet=(double *)malloc(nb_lignes*sizeof(double));
+	MPI_Bcast (vecteur1_complet, nb_lignes, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	}
 
-	printf("matrice\n");
-	affiche(matrice, nb_lignes*nb_colonnes, nb_colonnes);
-	*/
+	if(rank ==0){
+	double *pmv= (double *)malloc(nb_lignes*sizeof(double));	
+	double *resultat_sequentiel= (double *)malloc(nb_lignes*sizeof(double));
 
-	//COMPLEXITE EN TEMPS POUR LE PRODUIT SCALAIRE ET LE PRODUIT MATRICE VECTEUR EN SEQUENTIEL
+	}
+
+	//COMPLEXITE EN TEMPS POUR LE PRODUIT MATRICE VECTEUR EN PARALLEL
+	t3=MPI_Wtime();
+	resultat_parallel=produit_matrice_vecteur_parallel(matrice, vecteur1_complet, nb_lignes, nb_colonnes, nb_lignes_process, pmv);
+	t4=MPI_Wtime();
+
+	if(rank==0){
+		t5=MPI_Wtime();
+		resultat_sequentiel=produit_matrice_vecteur_sequentiel(matrice_complete, vecteur1_complet, nb_lignes, nb_colonnes);
+		t6=MPI_Wtime();		
+		printf("\tResultat_sequentiel_produit_matrice_vecteur = \n");
+		//affiche(resultat_sequentiel, nb_ligne, nb_ligne);
+		printf("le temps d'execution du produit matrice vecteur en sequentiel est: %f\n", t6-t5);
+		printf("\tResultat_parallel_produit_matrice_vecteur = \n");	
+		//affiche(pmv, nb_ligne, nb_ligne);
+		printf("le temps d'execution du produit matrice vecteur en parallel est: %f\n", t4-t3);
+	}
 
 
-
-	//COMPLEXITE EN ESPACE MEMOIRE 
-	//printf("La complexité en espace memoire : %d\n", (1+ (nb_lignes*3) + (nb_lignes*nb_colonnes)));
-	
+//COMPLEXITE EN ESPACE MEMOIRE 
+	if(rank ==0){
+		printf("La complexité en espace memoire : %d\n", (1+ (nb_lignes*3) + (nb_lignes*nb_colonnes)));
+	}
 	
 
 	free(vecteur1);
