@@ -1,5 +1,5 @@
 #!/bin/bash
-TAILLE=15000
+TAILLE=10000
 rm -rf resultat.txt
 
 for((NBTACHE=1;$NBTACHE<10;NBTACHE=NBTACHE+1))
