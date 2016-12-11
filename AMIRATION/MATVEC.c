@@ -54,31 +54,30 @@ double produit_scalaire_parallel(double *vecteur1, double *vecteur2, int taille)
 double *produit_matrice_vecteur(double *matrice, double *vecteur1, int nb_lignes, int nb_colonnes){
 
 	int i;
-	double *resultat=(double *)malloc(nb_lignes*sizeof(double));
+	double *resultat_matvec_seq=(double *)malloc(nb_lignes*sizeof(double));
 
 	for(i=0; i<nb_lignes; i++){
-		resultat[i]=produit_scalaire(matrice+(i*nb_colonnes),vecteur1, nb_colonnes);
+		resultat_matvec_seq[i]=produit_scalaire(matrice+(i*nb_colonnes),vecteur1, nb_colonnes);
 	}
-	return resultat;
+	return resultat_matvec_seq;
 
-	free(resultat);
-}
+	}
 
 //PRODUIT MATRICE VECTEUR PARALLEL
 
 double *produit_matrice_vecteur_parallel(double *matrice, double *vecteur1, int nb_lignes, int nb_colonnes){
 
 	int i;
-	double *resultat=(double *)malloc(nb_lignes*nb_colonnes*sizeof(double));
+	double *resultat_matvec_paral=(double *)malloc(nb_lignes*nb_colonnes*sizeof(double));
 
 	#pragma omp parallel private(i) shared(matrice, vecteur1, nb_lignes, nb_colonnes)
 	#pragma omp for
 	for(i=0; i<nb_lignes; i++){
-		resultat[i]=produit_scalaire_parallel(matrice+(i*nb_colonnes), vecteur1, nb_colonnes);
+		resultat_matvec_paral[i]=produit_scalaire_parallel(matrice+(i*nb_colonnes), vecteur1, nb_colonnes);
 	}
-	return resultat;
-	free(resultat);
-}
+	return resultat_matvec_paral;
+	
+	}
 
 
 
@@ -101,6 +100,11 @@ int main(int argc, char **argv){
 	double *vecteur1=(double *)malloc(nb_lignes*sizeof(double));
 	double *vecteur2=(double *)malloc(nb_lignes*sizeof(double));
 	double *matrice=(double *)malloc((nb_lignes*nb_colonnes)*sizeof(double));
+
+	double *resultat_pmv_seq=(double *)malloc((nb_lignes)*sizeof(double));
+
+	double *resultat_pmv_paral=(double *)malloc((nb_lignes)*sizeof(double));
+	
 
 	//INITIALISATION DES VECTEURS ET DES MATRICES
 
@@ -135,9 +139,9 @@ int main(int argc, char **argv){
 	printf("temps d'execution du produit scalaire en séquentiel: %fs\n", (double) (duree_calcul.tv_sec)+(duree_calcul.tv_usec) /1000000.0);
 
 
-
+	
 	gettimeofday(&debut_calcul, NULL);
-	produit_matrice_vecteur(matrice, vecteur1, nb_lignes, nb_colonnes);
+	resultat_pmv_seq=produit_matrice_vecteur(matrice, vecteur1, nb_lignes, nb_colonnes);
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
 	printf("le temps d'execution du produit matrice vecteur en séquentiel: %fs\n", (double) (duree_calcul.tv_sec)+(duree_calcul.tv_usec) / 1000000.0);
@@ -154,7 +158,7 @@ int main(int argc, char **argv){
 
 
 	gettimeofday(&debut_calcul, NULL);
-	produit_matrice_vecteur_parallel(matrice, vecteur1, nb_lignes, nb_colonnes);
+	resultat_pmv_paral=produit_matrice_vecteur_parallel(matrice, vecteur1, nb_lignes, nb_colonnes);
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
 	printf("le temps d'execution du produit matrice vecteur en parallel: %fs\n", (double) (duree_calcul.tv_sec)+(duree_calcul.tv_usec) / 1000000.0);
@@ -167,6 +171,8 @@ int main(int argc, char **argv){
 	free(vecteur1);
 	free(vecteur2);
 	free(matrice);
+	free(resultat_pmv_seq);
+	free(resultat_pmv_paral);
 
 	exit(0);
 
