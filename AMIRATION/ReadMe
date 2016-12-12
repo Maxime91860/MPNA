@@ -1,0 +1,55 @@
+##################################################
+		AKLOUL AMIRA
+
+PRODUIT SCALAIRE     /    PRODUIT MATRICE VECTEUR
+
+		SEQUENTIEL
+		PARALLELE AVEC OPENMP
+		PARALLELE AVEC MPI
+##################################################
+
+
+#Dans le repertoire il y'a les fichiers "makefile", "MATVEC.c" , MATVEC_mpi.c" et "script_EVOLUTION_TPS.gplot":
+
+	-> "makefile": fichier des commande de compilation et d'exécution
+	-> "MATVEC.c": script produit scalaire et produit matrice vecteur en sequentiel et en parallel (openmp)
+	-> "MATVEC_mpi.c": script produit scalaire et produit matrice vecteur en sequentiel et en parallel (mpi)
+	-> "script_EVOLUTION_TPS.gplot": script gnuplot qui permet de tracer la courbe du temps séquentiel et du temps parallele en fonction de la taille des données
+
+#COMPILATION
+
+	-> make clean
+	-> make
+
+
+#EXECUTION
+
+Pour executer le programme en sequentiel ou avec openmp: 
+	
+	./MATVEC.pgr <nb_lignes> <nb_colonnes>
+
+
+Pour executer le programme en parallel:
+
+	-> Avec MPI :
+	
+		mpirun -np <nombre de processus> ./MATVEC_mpi.pgr <nb_lignes> <nb_colonnes> 
+
+
+Pour une exéction plus ameliorée:
+
+-> ./Complexité_en_temps.sh 
+
+Le fichier "resultat.txt" est généré qui contient les informations : NB_PROCESSUS - TAILLE MATRICE -TEMPS SEQUENTIEL PRODUIT SCALAIRE -TEMPS PARALLEL PRODUIT SCALAIRE - TEMPS SEQUENTIEL PRODUIT MATRICE VECTEUR - TEMPS PARALLEL PRODUIT MATRICE VECTEUR
+
+
+Il existe déja un exemple de fichier "EVOLUTION_TPS.txt" qui a été généré apres l'execution "./Complexité_en_temps.sh " 
+
+On peut tracer les courbes de performance avec les commandes:
+ 
+-> gnuplot *.gplot
+-> evince *.eps
+
+	
+
+

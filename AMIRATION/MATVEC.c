@@ -89,8 +89,9 @@ int main(int argc, char **argv){
 	struct timeval debut_calcul, fin_calcul, duree_calcul;
 
 	if(argc<3){
-		printf("erreur argument\n");
-		printf("exemple d'execution: ./executable <nb_lignes> <nb_colonnes>\n"); 
+		printf("Erreur argument\n");
+		printf("Pour executer le programme en sequentiel: ./executable <nb_lignes> <nb_colonnes>\n"); 
+		printf("Pour executer le programme en parallel: mpirun -np <nombre de processus> ./executable <nb_lignes> <nb_colonnes>\n");  
 		exit(1);
 	}
 
@@ -101,9 +102,9 @@ int main(int argc, char **argv){
 	double *vecteur2=(double *)malloc(nb_lignes*sizeof(double));
 	double *matrice=(double *)malloc((nb_lignes*nb_colonnes)*sizeof(double));
 
-	double *resultat_pmv_seq=(double *)malloc((nb_lignes)*sizeof(double));
+	double *resultat_pmv_seq;
 
-	double *resultat_pmv_paral=(double *)malloc((nb_lignes)*sizeof(double));
+	double *resultat_pmv_paral;
 	
 
 	//INITIALISATION DES VECTEURS ET DES MATRICES
@@ -165,7 +166,7 @@ int main(int argc, char **argv){
 
 
 	//COMPLEXITE EN ESPACE MEMOIRE 
-	printf("La complexité en espace memoire : %d\n", (1+ (nb_lignes*3) + (nb_lignes*nb_colonnes)));
+	//printf("La complexité en espace memoire : %d\n", (1+ (nb_lignes*3) + (nb_lignes*nb_colonnes)));
 
 
 	free(vecteur1);
