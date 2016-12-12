@@ -1,0 +1,15 @@
+
+	set encoding iso_8859_1
+	set terminal postscript eps color enhanced 12
+	set output "gram_schmidt.eps"
+	set title "Evolution du temps de l'erreur de pr\351cision en fonction de la taille des donn\351es"
+	set xlabel "Taille du matrice"
+	set ylabel "Erreur de pr\351cision"
+	set xtics 50
+	set ytics 5000
+	set mxtics 2
+	set mytics 2
+	set grid ytics mytics 
+	set key below
+	plot "gram_schmidt.txt" u 1:2 title "Gram-Schmidt Classique" with linespoints lc rgb "blue" \
+		 , "gram_schmidt.txt" u 1:3 title "Gram-Schmidt Modifi\351" with linespoints lc rgb "#228b22" \

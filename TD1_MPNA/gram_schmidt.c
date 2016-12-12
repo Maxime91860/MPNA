@@ -62,6 +62,39 @@ double norme_vecteur (double* vecteur, int taille_vecteur){
 	return somme;
 }
 
+
+double* gram_schmidt_modifie (double* A, int nb_vecteurs, int taille_vecteur){
+
+	double* Q = (double *) malloc (nb_vecteurs*taille_vecteur*sizeof(double));
+	double* w;
+	double* R = (double *) malloc (nb_vecteurs*taille_vecteur*sizeof(double));
+	int i, j, k;
+
+	for(i=0; i<nb_vecteurs*taille_vecteur; i++){
+		R[i] = 0;
+	}
+
+	for (k=0; k<nb_vecteurs; k++){
+		w = A+(k*taille_vecteur);
+		for(j=0; j<=k-1; j++){
+			R[j + k*taille_vecteur] = produit_scalaire(w, Q+j*taille_vecteur, taille_vecteur);
+		
+			for(i=0; i<taille_vecteur; i++){
+				w[i] = w[i] - R[j + k*taille_vecteur] * Q[k + j*taille_vecteur];
+			}
+		}
+		R[k + k*taille_vecteur] = norme_vecteur(w,taille_vecteur);
+		for(i=0; i<taille_vecteur; i++){
+			Q[i + k*taille_vecteur] = w[i] / R[k + k*taille_vecteur];
+		}
+
+		// printf("\n");
+		// affiche(R, nb_vecteurs*taille_vecteur, taille_vecteur);
+		// printf("\n");
+	}
+	return Q;
+}
+
 double* gram_schmidt (double* A, int nb_vecteurs, int taille_vecteur){
 
 	double* Q = (double *) malloc (nb_vecteurs*taille_vecteur*sizeof(double));
@@ -92,9 +125,6 @@ double* gram_schmidt (double* A, int nb_vecteurs, int taille_vecteur){
 		// affiche(R, nb_vecteurs*taille_vecteur, taille_vecteur);
 		// printf("\n");
 	}
-
-
-
 	return Q;
 }
 
@@ -111,6 +141,7 @@ int main (int argc, char** argv){
 	int taille_vecteur;
 	double* matrice_A;
 	double* resultat;
+	double* resultat_modifie;
 	int i, j;
 
 	nb_vecteurs = atoi(argv[1]);
@@ -127,6 +158,7 @@ int main (int argc, char** argv){
 	// affiche(matrice_A, nb_vecteurs*taille_vecteur, taille_vecteur);
 
 	resultat = gram_schmidt(matrice_A, nb_vecteurs, taille_vecteur);
+	resultat_modifie = gram_schmidt_modifie(matrice_A, nb_vecteurs, taille_vecteur);
 
 	// printf("\n");
 
@@ -137,11 +169,28 @@ int main (int argc, char** argv){
 	for(i=0; i<nb_vecteurs; i++){
 		for(j=0+i; j<nb_vecteurs; j++){
 			if(i != j){
-				erreur_precision += produit_scalaire(resultat + i*taille_vecteur, resultat + j*taille_vecteur, taille_vecteur);
+				erreur_precision += fabs(produit_scalaire(resultat + i*taille_vecteur, resultat + j*taille_vecteur, taille_vecteur));
 			}
 		}
 	}
-	printf("Erreur de precision : %f\n",erreur_precision);
+
+	double erreur_precision_modfie = 0;
+	for(i=0; i<nb_vecteurs; i++){
+		for(j=0+i; j<nb_vecteurs; j++){
+			if(i != j){
+				erreur_precision_modfie += fabs(produit_scalaire(resultat_modifie + i*taille_vecteur, resultat_modifie + j*taille_vecteur, taille_vecteur));
+			}
+		}
+	}
+
+
+
+	printf("Erreur de precision Gram-Schmidt: %f\n",erreur_precision);
+	printf("Erreur de precision Gram-Schmidt modifié: %f\n",erreur_precision_modfie);
+
+	FILE* fichier_sortie = fopen("gram_schmidt.txt","a+");
+	//Nombre processus - Taille matrice - Temps sequentiel PS - Temps parallèle PS - Temps sequentiel PMV - Temps parallèle PMV
+	fprintf(fichier_sortie, "%d %f %f\n", nb_vecteurs, erreur_precision, erreur_precision_modfie);
 
 
 	free(resultat);
