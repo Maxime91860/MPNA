@@ -80,7 +80,7 @@ double* gram_schmidt_modifie (double* A, int nb_vecteurs, int taille_vecteur){
 			R[j + k*taille_vecteur] = produit_scalaire(w, Q+j*taille_vecteur, taille_vecteur);
 		
 			for(i=0; i<taille_vecteur; i++){
-				w[i] = w[i] - R[j + k*taille_vecteur] * Q[k + j*taille_vecteur];
+				w[i] = w[i] - R[j + k*taille_vecteur] * Q[i + j*taille_vecteur];
 			}
 		}
 		R[k + k*taille_vecteur] = norme_vecteur(w,taille_vecteur);
@@ -113,7 +113,7 @@ double* gram_schmidt (double* A, int nb_vecteurs, int taille_vecteur){
 		}
 		for(j=0; j<=k-1; j++){
 			for(i=0; i<taille_vecteur; i++){
-				w[i] = w[i] - R[j + k*taille_vecteur] * Q[k + j*taille_vecteur];
+				w[i] = w[i] - R[j + k*taille_vecteur] * Q[i + j*taille_vecteur];
 			}
 		}
 		R[k + k*taille_vecteur] = norme_vecteur(w,taille_vecteur);
@@ -169,7 +169,8 @@ int main (int argc, char** argv){
 	for(i=0; i<nb_vecteurs; i++){
 		for(j=0+i; j<nb_vecteurs; j++){
 			if(i != j){
-				erreur_precision += fabs(produit_scalaire(resultat + i*taille_vecteur, resultat + j*taille_vecteur, taille_vecteur));
+				erreur_precision += fabs(produit_scalaire(resultat + i*taille_vecteur, 
+														  resultat + j*taille_vecteur, taille_vecteur));
 			}
 		}
 	}
@@ -178,19 +179,19 @@ int main (int argc, char** argv){
 	for(i=0; i<nb_vecteurs; i++){
 		for(j=0+i; j<nb_vecteurs; j++){
 			if(i != j){
-				erreur_precision_modfie += fabs(produit_scalaire(resultat_modifie + i*taille_vecteur, resultat_modifie + j*taille_vecteur, taille_vecteur));
+				erreur_precision_modfie += fabs(produit_scalaire(resultat_modifie + i*taille_vecteur,
+																 resultat_modifie + j*taille_vecteur, taille_vecteur));
 			}
 		}
 	}
 
 
 
-	printf("Erreur de precision Gram-Schmidt: %f\n",erreur_precision);
-	printf("Erreur de precision Gram-Schmidt modifié: %f\n",erreur_precision_modfie);
+	printf("Erreur de precision Gram-Schmidt: %e\n",erreur_precision);
+	printf("Erreur de precision Gram-Schmidt modifié: %e\n",erreur_precision_modfie);
 
 	FILE* fichier_sortie = fopen("gram_schmidt.txt","a+");
-	//Nombre processus - Taille matrice - Temps sequentiel PS - Temps parallèle PS - Temps sequentiel PMV - Temps parallèle PMV
-	fprintf(fichier_sortie, "%d %f %f\n", nb_vecteurs, erreur_precision, erreur_precision_modfie);
+	fprintf(fichier_sortie, "%d %e %e\n", nb_vecteurs, erreur_precision, erreur_precision_modfie);
 
 
 	free(resultat);

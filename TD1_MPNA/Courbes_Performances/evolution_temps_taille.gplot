@@ -1,0 +1,15 @@
+
+	set encoding iso_8859_1
+	set terminal postscript eps color enhanced 16
+	set output "evolution_temps_taille.eps"
+	set title "Evolution du temps de calcul en fonction de la taille des donn\351es"
+	set xlabel "Taille du vecteur / matrice"
+	set ylabel "Temps d'ex\351cution"
+	set xtics 1000
+	set ytics 20
+	set mxtics 2
+	set mytics 2
+	set grid xtics ytics mxtics mytics 
+	set key below
+	plot "evolution_temps_taille.txt" u 2:6 title "Temps avec 4 processus" with linespoints lc rgb "blue" \
+		 , "evolution_temps_taille.txt" u 2:5 title "Temps sequentiel" with linespoints lc rgb "#228b22" \

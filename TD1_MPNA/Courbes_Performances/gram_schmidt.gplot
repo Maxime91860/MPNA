@@ -5,11 +5,9 @@
 	set title "Evolution de l'erreur de pr\351cision en fonction de la taille des donn\351es"
 	set xlabel "Nombre de vecteurs"
 	set ylabel "Erreur de pr\351cision"
-	set xtics 50
-	set ytics 5000
-	set mxtics 2
-	set mytics 2
 	set grid ytics mytics 
 	set key below
+	set logscale y
+	set format y "%e"
 	plot "gram_schmidt.txt" u 1:2 title "Gram-Schmidt Classique" with linespoints lc rgb "blue" \
 		 , "gram_schmidt.txt" u 1:3 title "Gram-Schmidt Modifi\351" with linespoints lc rgb "#228b22" \

@@ -1,0 +1,14 @@
+
+	set encoding iso_8859_1
+	set terminal postscript eps color enhanced 16
+	set output "scalabilite_forte.eps"
+	set title "Scalabilite forte"
+	set xlabel "Nombre de processus MPI"
+	set ylabel "Temps d'ex\351cution"
+	set xtics 10
+	set ytics 20
+	set mxtics 1
+	set mytics 2
+	set grid xtics ytics mxtics mytics 
+	set key below
+	plot "scalabilite_forte.txt" u 1:6 title "Temps" with linespoints lc rgb "blue" \
