@@ -1,0 +1,14 @@
+
+	set encoding iso_8859_1
+	set terminal postscript eps color enhanced 16
+	set output "produit_scal_croisement.eps"
+	#set title "Evolution du temps de calcul du produit scalaire en fonction de la taille des vecteurs"
+	set xlabel "Taille des vecteurs"
+	set ylabel "Temps d'ex\351cution en secondes"
+	set xrange [0:3000]
+	set xtics 250
+	#set ytics 20
+	set grid xtics ytics 
+	set key left above
+	plot "evolution_temps_taille.txt" u 2:4 title "Temps avec 4 processus" with linespoints lc rgb "blue" \
+		 , "evolution_temps_taille.txt" u 2:3 title "Temps sequentiel" with linespoints lc rgb "#228b22" \

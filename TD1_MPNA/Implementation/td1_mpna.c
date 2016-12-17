@@ -181,4 +181,4 @@ int main (int argc, char** argv){
 	free(matrice);
 
 	exit(0);
-}
+} 
