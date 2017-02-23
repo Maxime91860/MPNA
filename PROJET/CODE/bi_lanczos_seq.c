@@ -124,6 +124,19 @@ double* transposee (double* A, int n){
 	return At;
 }
 
+//Calcul de la transposée d'une matrice (n*m)
+double* transposee2 (double* A, int n, int m){
+
+	double * At = (double *) malloc (m*n*sizeof(double));
+	int i, j; 
+	for(i=0; i<m; i++){
+		for(j=0; j<n; j++){
+			At[j+i*n] = A[i+j*m];
+		}
+	}
+	return At;
+}
+
 //Calcul du produit matriciel de la matrice1 (n1*m1) par matrice2 (n2*m2) (à valider)
 double* produit_matrice_matrice (double* matrice1, double* matrice2, int n1, int m1, int n2, int m2){
 
@@ -254,7 +267,8 @@ void bi_lanczos(double* A, int m, int n){
 //Fonction de test des différentes fonctions implémentées
 void test(){
 
-	int n = 10;
+	int n = 5;
+	int m = 8;
 	double* vecteur1 = (double *) malloc (n*sizeof(double));
 	double* vecteur2 = (double *) malloc (n*sizeof(double));
 	double* vecteur3 = (double *) malloc (n*sizeof(double));
@@ -267,28 +281,28 @@ void test(){
 	}
 
 
-	printf("Vecteur1 :\n");
-	affiche(vecteur1, n, n);
-	printf("Vecteur2 :\n");
-	affiche(vecteur2, n, n);
-	printf("Vecteur3 :\n");
-	affiche(vecteur3, n, n);
+	// printf("Vecteur1 :\n");
+	// affiche(vecteur1, n, n);
+	// printf("Vecteur2 :\n");
+	// affiche(vecteur2, n, n);
+	// printf("Vecteur3 :\n");
+	// affiche(vecteur3, n, n);
 
-	//Test vecteur * scalaire
-	double* result = mul_vecteur_scalaire(4, vecteur1, n);
-	printf("--- TEST vect*scal ---\n  Vecteur1 * 4 =\n");
-	affiche(result, n, n);
+	// //Test vecteur * scalaire
+	// double* result = mul_vecteur_scalaire(4, vecteur1, n);
+	// printf("--- TEST vect*scal ---\n  Vecteur1 * 4 =\n");
+	// affiche(result, n, n);
 
-	//Test vecteur - vecteur
-	diff_vecteurs(vecteur1, vecteur1, result, n);
-	printf("--- TEST vect-vect ---\n  Vecteur1 - Vecteur1 =\n");
-	affiche(result, n, n);
+	// //Test vecteur - vecteur
+	// diff_vecteurs(vecteur1, vecteur1, result, n);
+	// printf("--- TEST vect-vect ---\n  Vecteur1 - Vecteur1 =\n");
+	// affiche(result, n, n);
 
-	//Test vecteur / scalaire
-	div_vecteur_scalaire(vecteur3, 3, n);
+	// //Test vecteur / scalaire
+	// div_vecteur_scalaire(vecteur3, 3, n);
 
-	printf("--- TEST vect/scal ---\n  Vecteur3 / 3 =\n");
-	affiche(vecteur3, n, n);
+	// printf("--- TEST vect/scal ---\n  Vecteur3 / 3 =\n");
+	// affiche(vecteur3, n, n);
 
 	double * matrice1 = (double *) malloc (n*n*sizeof(double));
 	double * matrice2 = (double *) malloc (n*n*sizeof(double));
@@ -305,20 +319,33 @@ void test(){
 			matrice2[i + j*n] = 2;
 		}
 	}
-	printf("matrice1 : \n");
-	affiche(matrice1, n*n, n);
-	printf("matrice2 : \n");
-	affiche(matrice2, n*n, n);
-	double* resultat = produit_matrice_matrice(matrice1, matrice2, n, n, n, n);
-	printf("resultat : \n");
-	affiche(resultat, n*n, n);
+	// printf("matrice1 : \n");
+	// affiche(matrice1, n*n, n);
+	// printf("matrice2 : \n");
+	// affiche(matrice2, n*n, n);
+	// double* resultat = produit_matrice_matrice(matrice1, matrice2, n, n, n, n);
+	// printf("resultat : \n");
+	// affiche(resultat, n*n, n);
+
+
+	//Tests transposée générale avec matrice (n*m)
+	double * matrice3 = (double *) malloc (n*m*sizeof(double));
+	for(i=0; i < n*m; i++){
+		matrice3[i] = rand()%9 + 0.;
+	}
+	printf("matrice3 : \n");
+	affiche(matrice3, n*m, m);
+	double* matrice3_t = transposee2(matrice3, n, m);
+	printf("transposée matrice3 :\n");
+	affiche(matrice3_t, n*m, n);
 
 	free(vecteur1);
 	free(vecteur2);
 	free(vecteur3);
 	free(matrice1);
 	free(matrice2);
-	free(resultat);
+	free(matrice3);
+	// free(resultat);
 }
 
 
