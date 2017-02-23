@@ -10,6 +10,7 @@
 #include <sys/time.h> 
 #include <math.h>
 #include <string.h>
+#include <sys/time.h> 
 
 //Dans ce programme nos vecteurs sont stockés en ligne.
 
@@ -168,7 +169,7 @@ void bi_lanczos(double* A, int m, int n){
 	double beta = 0;
 	double delta = 0;
 
-	FILE* log = fopen("log.txt","a");
+	// FILE* log = fopen("log.txt","a");
 
 	//Vecteur initiaux
 	double* v = (double *) malloc ((m+2)*n*sizeof(double));
@@ -216,7 +217,7 @@ void bi_lanczos(double* A, int m, int n){
 
 		alpha = produit_scalaire(produit_A_v, w+(j*n), n);
 
-		fprintf(log, "ITERATION #%d : alpha = %f, beta = %f, delta = %f\n", j, alpha, beta, delta);
+		// fprintf(log, "ITERATION #%d : alpha = %f, beta = %f, delta = %f\n", j, alpha, beta, delta);
 
 		double* res1;
 		double* res2;
@@ -256,12 +257,12 @@ void bi_lanczos(double* A, int m, int n){
 		}
 	}
 
-	printf("V =\n");
-	affiche(v, n*(m+1), n);
-	printf("W =\n");
-	affiche(w, n*(m+1), n);
-	printf("T =\n");
-	affiche(transposee(t, m), m*m, m);
+	// printf("V =\n");
+	// affiche(v, n*(m+1), n);
+	// printf("W =\n");
+	// affiche(w, n*(m+1), n);
+	// printf("T =\n");
+	// affiche(transposee(t, m), m*m, m);
 }
 
 //Fonction de test des différentes fonctions implémentées
@@ -359,11 +360,18 @@ int main(int argc, char const *argv[]){
 	int taille_ss_espace_krylov = atoi(argv[2]);
 	int taille_matrice = atoi(argv[1]);
 
+	fprintf(stderr, "taille_matrice = %d, taille_ss_espace_krylov = %d\n",taille_matrice, taille_ss_espace_krylov);
+
 	if (taille_ss_espace_krylov > taille_matrice){
 		fprintf(stderr, "Erreur arguments:\n\tUsage : La <taille_ss_espace_krylov>  doit être inférieur ou égale à la <taille_matrice>\n");
 		exit(-1);
 	}
 
+
+
+	struct timeval debut_calcul, fin_calcul, duree_calcul;
+
+	//Allocation et initialisation de la matrice à projeter
 	double* A = (double *) malloc (taille_matrice*taille_matrice*sizeof(double));
 
 	int i;
@@ -372,18 +380,26 @@ int main(int argc, char const *argv[]){
 		A[i] = rand()%80 + 10.;
 	}
 
-	if(taille_matrice <= 10){
-		affiche(A, taille_matrice*taille_matrice, taille_matrice);
-		printf("transposee : \n");
-		affiche(transposee(A,taille_matrice), taille_matrice*taille_matrice, taille_matrice);
+	FILE* output = fopen("OUTPUT/temps_execution.txt","a+");
+
+	if(output == NULL){
+		fprintf(stderr, "Erreur d'ouverture du fichier OUTPUT/temps_execution.txt\n");
+		exit(-1);
 	}
 
+	// if(taille_matrice <= 10){
+	// 	affiche(A, taille_matrice*taille_matrice, taille_matrice);
+	// 	printf("transposee : \n");
+	// 	affiche(transposee(A,taille_matrice), taille_matrice*taille_matrice, taille_matrice);
+	// }
 
-	
 
-	test();
-
-	// bi_lanczos(A,taille_ss_espace_krylov, taille_matrice);
+	gettimeofday(&debut_calcul, NULL);
+	bi_lanczos(A,taille_ss_espace_krylov, taille_matrice);
+	gettimeofday(&fin_calcul, NULL);
+	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
+	fprintf(output, "%d %f\n", taille_matrice,
+			(double) (duree_calcul.tv_sec) + (duree_calcul.tv_usec / 1000000.0));
 
 	return 0;
 }
