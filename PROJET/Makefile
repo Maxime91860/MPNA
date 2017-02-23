@@ -10,6 +10,7 @@ code :
 
 clean_code : 
 	make clean -C CODE
+	rm log.txt
 
 clean_output : 
 	rm -rf OUTPUT/* 
