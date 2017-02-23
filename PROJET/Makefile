@@ -1,9 +1,12 @@
 
 
-all : make -C code
+all : code
+
+exec :
+	./CODE/bi_lanczos_seq.pgr 9 5
 
 code : 
-	make -C code	
+	make -C CODE	
 
 clean_code : 
 	make clean -C CODE
