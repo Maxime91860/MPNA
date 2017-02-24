@@ -27,4 +27,4 @@ clean_output :
 clean_plot :
 	rm -rf PLOT/* 
 
-clean : clean_output clean_plot clean_code
+clean : clean_code

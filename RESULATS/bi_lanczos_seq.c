@@ -16,6 +16,41 @@
 
 //Dans ce programme nos vecteurs sont stockés en ligne.
 
+void couple_ritz(double *A, int n, double *v, double *lambda)
+{
+	double *wr=NULL, *wi=NULL;
+	wr=malloc(n*sizeof(double));
+	wi=malloc(n*sizeof(double));
+
+	double *vr=NULL, *vl=NULL;
+	vr=malloc(n*n*sizeof(double));
+	vl=malloc(n*n*sizeof(double));
+
+	LAPACKE_dgeev(LAPACK_ROW_MAJOR,	// Row/Col major
+			'N',	// Vecteurs propres gauches
+			'V',	// Vecteurs propres droits
+			n,	// Ordre de A
+			A,	// A
+			n,	// Dimension de A
+			wr,	// Parie réelle des valeurs propres
+			wi,	// Partie immaginaire
+			vl,	// Vecteurs propres gauches
+			n,	// idvl
+			vr,	// Vecteurs propres droits
+			n);	// idvr
+	
+	int i;
+	#ifdef DEBUG
+	for(i=0 ; i<n ; i++)
+		printf("%d : %lf + %lfi\n", i, wr[i], wi[i]);
+	#endif
+	*lambda=wr[0];
+	for(i=0 ; i<n ; i++)
+		v[i]=vr[i];
+	free(wr);
+	free(wi);
+	free(vr);
+}
 
 //Fonction d'affichage d'un vecteur ou d'une matrice
 void affiche(double* tab, int N, int width){
@@ -265,6 +300,22 @@ void bi_lanczos(double* A, int m, int n){
 	// affiche(w, n*(m+1), n);
 	// printf("T =\n");
 	// affiche(transposee(t, m), m*m, m);
+	double* vecteur_propre_approche = (double *) malloc (m*sizeof(double));
+	double lambda;
+	couple_ritz(t, m, vecteur_propre_approche, &lambda);
+	
+	printf("Plus grande valeur propre : %g\n",lambda);
+	affiche(vecteur_propre_approche, m, m);
+
+	double* vecteur_propre = (double *) malloc (n*sizeof(double));
+	couple_ritz( transposee(A,n) , n, vecteur_propre, &lambda);
+	printf("Plus grande valeur propre : %g\n",lambda);
+	affiche(vecteur_propre, n, n);
+
+	printf("Produit A*vecteur_propre\n");
+	affiche(produit_matrice_vecteur(A,vecteur_propre,n,n), n, n);
+	printf("Produit valeur_propre*vecteur_propre\n");
+	affiche(mul_vecteur_scalaire(lambda, vecteur_propre, n),n,n);
 }
 
 //Fonction de test des différentes fonctions implémentées

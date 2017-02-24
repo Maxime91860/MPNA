@@ -2,9 +2,12 @@
 
 set grid
 set terminal postscript eps color enhanced 16
-set output "PLOT/tps_calcul_taille.eps"
+set output "PLOT/tps_calcul_taille2.eps"
 set xlabel "Taille matrice"
 set ylabel "Temps de calcul projection"
 set title "Evolution du temps de calcul de la projection en fonction de la taille de la matrice"
 
-plot 'OUTPUT/temps_execution.txt' u 1:2 w lp title "Temps sequentiel"
+plot 'OUTPUT/temps_execution.txt' u 1:2 w lp title "Temps s\351quentiel",\
+'OUTPUT/temps_execution_amira.txt' u 1:2 w lp title "Temps s\351quentiel"
+
+
