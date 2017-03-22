@@ -11,8 +11,8 @@
 #include <math.h>
 #include <string.h>
 #include <sys/time.h> 
-#include <cblas.h>
-#include <lapacke.h>
+// #include <cblas.h>
+// #include <lapacke.h>
 
 //Dans ce programme nos vecteurs sont stockés en ligne.
 
@@ -165,7 +165,7 @@ double* produit_matrice_matrice (double* matrice1, double* matrice2, int n1, int
 //	- la projection de la matrice A, dans T
 // V sera la base pour A
 // W sera la base pour la transposée de A, A^t
-void bi_lanczos(double* A, int m, int n){
+void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 
 	double alpha;
 	double beta = 0;
@@ -174,9 +174,9 @@ void bi_lanczos(double* A, int m, int n){
 	// FILE* log = fopen("log.txt","a");
 
 	//Vecteur initiaux
-	double* v = (double *) malloc ((m+2)*n*sizeof(double));
-	double* w = (double *) malloc ((m+2)*n*sizeof(double));
-	double* t = (double *) malloc (m*m*sizeof(double));
+	v = (double *) malloc ((m+2)*n*sizeof(double));
+	w = (double *) malloc ((m+2)*n*sizeof(double));
+	t = (double *) malloc (m*m*sizeof(double));
 	double* produit_A_v;
 	double* produit_At_w;
 
@@ -275,7 +275,6 @@ void test(){
 	double* vecteur1 = (double *) malloc (n*sizeof(double));
 	double* vecteur2 = (double *) malloc (n*sizeof(double));
 	double* vecteur3 = (double *) malloc (n*sizeof(double));
-
 	int i;
 	for(i=0; i<n; i++){
 	       vecteur1[i] = i;
@@ -375,6 +374,9 @@ int main(int argc, char const *argv[]){
 
 	//Allocation et initialisation de la matrice à projeter
 	double* A = (double *) malloc (taille_matrice*taille_matrice*sizeof(double));
+	double* v;
+	double* w;
+	double* t;
 
 	int i;
 	for (i = 0; i < taille_matrice*taille_matrice; i++)
@@ -389,15 +391,15 @@ int main(int argc, char const *argv[]){
 		exit(-1);
 	}
 
-	// if(taille_matrice <= 10){
-	// 	affiche(A, taille_matrice*taille_matrice, taille_matrice);
-	// 	printf("transposee : \n");
-	// 	affiche(transposee(A,taille_matrice), taille_matrice*taille_matrice, taille_matrice);
-	// }
+	if(taille_matrice <= 10){
+		affiche(A, taille_matrice*taille_matrice, taille_matrice);
+		printf("transposee : \n");
+		affiche(transposee(A,taille_matrice), taille_matrice*taille_matrice, taille_matrice);
+	}
 
 
 	gettimeofday(&debut_calcul, NULL);
-	bi_lanczos(A,taille_ss_espace_krylov, taille_matrice);
+	bi_lanczos(A,taille_ss_espace_krylov, taille_matrice, t, v, w);
 	gettimeofday(&fin_calcul, NULL);
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
 	fprintf(output, "%d %f\n", taille_matrice,
