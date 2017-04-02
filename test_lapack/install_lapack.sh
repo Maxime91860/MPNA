@@ -1,1 +1,1 @@
-sudo apt install liblapack-dev liblapack3 libopenblas-base libopenblas-dev
+sudo apt install liblapack-dev liblapack3 libopenblas-base libopenblas-dev liblapacke-dev
