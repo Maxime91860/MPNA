@@ -11,10 +11,28 @@
 #include <math.h>
 #include <string.h>
 #include <sys/time.h> 
+#include <lapacke.h>
 // #include <cblas.h>
-// #include <lapacke.h>
 
 //Dans ce programme nos vecteurs sont stockés en ligne.
+
+
+//Fonction qui calcule les valeurs/vecteurs propres d'un matrice de taille n
+void calcul_valeurs_propres (double* matrice, int n,
+							 double* vpropres_r, double* vpropres_i,
+							  double* vect_gauche, double* vect_droit){
+
+    int info;
+    
+    //Calcul des valeurs propres
+    info = LAPACKE_dgeev( LAPACK_ROW_MAJOR, 'V', 'V', n, matrice, n, vpropres_r, vpropres_i, vect_gauche, n, vect_droit, n );
+
+    //Vérification du succès du calcul
+    if( info > 0 ) {
+            printf( "Erreur : Calcul valeurs propres.\n" );
+            exit( 1 );
+    }
+}
 
 
 //Fonction d'affichage d'un vecteur ou d'une matrice
