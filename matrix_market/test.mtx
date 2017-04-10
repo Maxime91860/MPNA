@@ -1,0 +1,13 @@
+%%MatrixMarket matrix coordinate real general
+%
+%  GRE_343_343
+%  A simulation of computer systems,
+%  from the GRENOBLE group of the Harwell Boeing Sparse Matrix Collection.
+%
+5 5 6
+1 1  1
+2 1  4
+2 2  9
+2 3  5
+5 5  7
+3 4  2
