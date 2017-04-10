@@ -9,11 +9,14 @@ CC=gcc
 
 all : bi_lanczos_seq.pgr #bi_lanczos_par.pgr
 
-bi_lanczos_seq.pgr : bi_lanczos_seq.c
+bi_lanczos_seq.pgr : bi_lanczos_seq.c mmio.o
 	$(CC) $^ $(LIB_FLAGS) $(LAPACK_FLAGS) -o $@
 
 bi_lanczos_par.pgr : bi_lanczos_par.c
 	$(CC) $^ $(LIB_FLAGS) $(MPI_FLAGS) -o $@
 
+mmio.o : mmio.c
+	$(CC) -c $^
+
 clean :
-	rm -rf *.pgr
+	rm -rf *.pgr *.o

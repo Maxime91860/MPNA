@@ -11,20 +11,107 @@
 #include <math.h>
 #include <string.h>
 #include <sys/time.h> 
+#include "mmio.h" //Fonctions qui parsent les fichiers de matrix market
 #include <lapacke.h>
 // #include <cblas.h>
 
 //Dans ce programme nos vecteurs sont stockés en ligne.
 
 
+//Fonction qui lit un fichier .mtx et renvoie la matrice du fichier
+double* lis_matrice (char* file_mtx_name, int* taille_matrice){
+
+    MM_typecode matcode;
+    FILE *file;
+    int nb_ligne, nb_col, non_zero;   
+    int i;
+	int *II;
+    int *J;
+    double *val;
+
+    if ((file = fopen(file_mtx_name, "r")) == NULL) 
+        exit(1);
+
+    if (mm_read_banner(file, &matcode) != 0)
+    {
+        printf("Could not process Matrix Market banner.\n");
+        exit(1);
+    }
+
+    /*  This is how one can screen matrix types if their application */
+    /*  only supports a subset of the Matrix Market data types.      */
+    if (mm_is_complex(matcode) && mm_is_matrix(matcode) && 
+            mm_is_sparse(matcode) )
+    {
+        printf("Sorry, this application does not support ");
+        printf("Market Market type: [%s]\n", mm_typecode_to_str(matcode));
+        exit(1);
+    }
+
+    //Récupération des dimensions de la matrice et du nombres d'éléments non-nuls
+    if (mm_read_mtx_crd_size(file, &nb_ligne, &nb_col, &non_zero) !=0)
+        exit(1);
+
+    II = (int *) malloc(non_zero * sizeof(int));
+    J = (int *) malloc(non_zero * sizeof(int));
+    val = (double *) malloc(non_zero * sizeof(double));
+
+    for (i=0; i<non_zero; i++)
+    {
+        fscanf(file, "%d %d %lg\n", &II[i], &J[i], &val[i]);
+        II[i]--;  /* adjust from 1-based to 0-based */
+        J[i]--;
+    }
+
+    fclose(file);
+
+    //Passage de stockage creux à stockage plein
+    double* matrice = (double*) malloc(nb_ligne * nb_col * sizeof(double));
+    memset(matrice, 0, nb_ligne * nb_col * sizeof(double));
+    for (i=0; i<non_zero; i++)
+    {
+    	matrice [II[i]*nb_ligne + J[i]] = val[i];
+    }   
+
+    if(nb_ligne != nb_col) {
+    	fprintf(stderr, "Erreur : la matrice n'est pas carrée.\n");
+    	exit(-1);
+    }
+
+    *taille_matrice = nb_ligne;
+    return matrice;
+}
+
+//Fonction qui renvoie une matrice aléatoire
+double* init_matrice (int taille_matrice){
+	int i;
+	double* A = (double *) malloc (taille_matrice*taille_matrice*sizeof(double));
+	for (i = 0; i < taille_matrice*taille_matrice; i++)
+	{
+		A[i] = rand()%80 + 10.;
+	}
+	return A;
+}
+
 //Fonction qui calcule les valeurs/vecteurs propres d'un matrice de taille n
-void calcul_valeurs_propres (double* matrice, int n,
-							 double* vpropres_r, double* vpropres_i,
-							  double* vect_gauche, double* vect_droit){
+void calcul_valeurs_propres (double* matrice, int n, double* vpropres_r, double* vpropres_i, double* vect_gauche, double* vect_droit){
 
     int info;
     
     //Calcul des valeurs propres
+    //Details des arguments :
+    //#1 Comment la matrice est stocker
+    //#2 Calcul ou non des vecteurs propres à gauche
+    //#3 Calcul ou non des vecteurs propres à droite
+    //#4 La dimension de la matrice
+    //#5 La matrice
+    //#6 La dimension de la matrice
+    //#7 Les parties reelles des valeurs propres
+    //#8 Les parties imaginaires des valeurs propres
+    //#9 Les vecteurs propres à gauche
+    //#10 La taille des vecteurs propres à gauche
+    //#11 Les vecteurs propres à droitre
+    //#12 La taille des vecteurs propres à droite
     info = LAPACKE_dgeev( LAPACK_ROW_MAJOR, 'V', 'V', n, matrice, n, vpropres_r, vpropres_i, vect_gauche, n, vect_droit, n );
 
     //Vérification du succès du calcul
@@ -33,7 +120,6 @@ void calcul_valeurs_propres (double* matrice, int n,
             exit( 1 );
     }
 }
-
 
 //Fonction d'affichage d'un vecteur ou d'une matrice
 void affiche(double* tab, int N, int width){
@@ -191,10 +277,6 @@ void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 
 	// FILE* log = fopen("log.txt","a");
 
-	//Vecteur initiaux
-	v = (double *) malloc ((m+2)*n*sizeof(double));
-	w = (double *) malloc ((m+2)*n*sizeof(double));
-	t = (double *) malloc (m*m*sizeof(double));
 	double* produit_A_v;
 	double* produit_At_w;
 
@@ -206,13 +288,21 @@ void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 	for(i=0; i<n; i++){
 		v[i] = 0; //v_0
 		w[i] = 0; //w_0
-		v[i+n] = 0; //v_1
-		w[i+n] = 0; //w_1
+		v[i+n] = rand()%80 + 10.; //v_1
+		w[i+n] = rand()%80 + 10.; //w_1
 	}
 
-	//pour que le (v_1,w_1) = 1
-	v[n] = 1; 
-	w[n] = 1;
+
+	//Pour que le (v_1,w_1) = 1
+	double ps = produit_scalaire(w+n, v+n, n);
+	for(i = 0; i<n; i++){
+		w[i+n] = w[i+n] / ps;
+	}
+	// printf("v_1\n");
+	// affiche(v+n, n, n);
+	// printf("w_1\n");
+	// affiche(w+n, n, n);
+	// printf("w_1.v_1 = %g\n", produit_scalaire(w+n, v+n, n));
 
 	//Initialisation de la matrice T
 	for(i=0; i<m*m; i++){
@@ -277,151 +367,114 @@ void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 		}
 	}
 
+
+
 	// printf("V =\n");
 	// affiche(v, n*(m+1), n);
 	// printf("W =\n");
 	// affiche(w, n*(m+1), n);
 	// printf("T =\n");
-	// affiche(transposee(t, m), m*m, m);
-}
-
-//Fonction de test des différentes fonctions implémentées
-void test(){
-
-	int n = 5;
-	int m = 8;
-	double* vecteur1 = (double *) malloc (n*sizeof(double));
-	double* vecteur2 = (double *) malloc (n*sizeof(double));
-	double* vecteur3 = (double *) malloc (n*sizeof(double));
-	int i;
-	for(i=0; i<n; i++){
-	       vecteur1[i] = i;
-	       vecteur2[i] = 2*i;
-	       vecteur3[i] = 3*i;
-	}
-
-
-	// printf("Vecteur1 :\n");
-	// affiche(vecteur1, n, n);
-	// printf("Vecteur2 :\n");
-	// affiche(vecteur2, n, n);
-	// printf("Vecteur3 :\n");
-	// affiche(vecteur3, n, n);
-
-	// //Test vecteur * scalaire
-	// double* result = mul_vecteur_scalaire(4, vecteur1, n);
-	// printf("--- TEST vect*scal ---\n  Vecteur1 * 4 =\n");
-	// affiche(result, n, n);
-
-	// //Test vecteur - vecteur
-	// diff_vecteurs(vecteur1, vecteur1, result, n);
-	// printf("--- TEST vect-vect ---\n  Vecteur1 - Vecteur1 =\n");
-	// affiche(result, n, n);
-
-	// //Test vecteur / scalaire
-	// div_vecteur_scalaire(vecteur3, 3, n);
-
-	// printf("--- TEST vect/scal ---\n  Vecteur3 / 3 =\n");
-	// affiche(vecteur3, n, n);
-
-	double * matrice1 = (double *) malloc (n*n*sizeof(double));
-	double * matrice2 = (double *) malloc (n*n*sizeof(double));
-
-	int j;
-	for(i=0; i<n; i++){
-		for(j=0; j<n; j++){
-			if(j==i){
-				matrice1[i + j*n] = rand()%3 + 0.;
-			}
-			else{
-				matrice1[i + j*n] = 0;
-			}
-			matrice2[i + j*n] = 2;
-		}
-	}
-	// printf("matrice1 : \n");
-	// affiche(matrice1, n*n, n);
-	// printf("matrice2 : \n");
-	// affiche(matrice2, n*n, n);
-	// double* resultat = produit_matrice_matrice(matrice1, matrice2, n, n, n, n);
-	// printf("resultat : \n");
-	// affiche(resultat, n*n, n);
-
-
-	//Tests transposée générale avec matrice (n*m)
-	double * matrice3 = (double *) malloc (n*m*sizeof(double));
-	for(i=0; i < n*m; i++){
-		matrice3[i] = rand()%9 + 0.;
-	}
-	printf("matrice3 : \n");
-	affiche(matrice3, n*m, m);
-	double* matrice3_t = transposee2(matrice3, n, m);
-	printf("transposée matrice3 :\n");
-	affiche(matrice3_t, n*m, n);
-
-	free(vecteur1);
-	free(vecteur2);
-	free(vecteur3);
-	free(matrice1);
-	free(matrice2);
-	free(matrice3);
-	// free(resultat);
+	// affiche(t, m*m, m);
 }
 
 
-int main(int argc, char const *argv[]){
+int main(int argc, char* argv[]){
 
+	//Check arguments
 	if(argc < 3){
-		fprintf(stderr, "Erreur arguments:\n\tUsage : %s <taille_matrice> <taille_ss_espace_krylov>\n", argv[0]);
+		fprintf(stderr, "Erreur arguments:\n\tUsage : %s <fichier_matrix_market> <taille_ss_espace_krylov>\n", argv[0]);
 		exit(-1);
 	}
 
 	int taille_ss_espace_krylov = atoi(argv[2]);
-	int taille_matrice = atoi(argv[1]);
+	int taille_matrice = 40;
 
-	fprintf(stderr, "taille_matrice = %d, taille_ss_espace_krylov = %d\n",taille_matrice, taille_ss_espace_krylov);
+	//Matrice à projeter
+	// double* A = lis_matrice(argv[1], &taille_matrice);
+	double* A = init_matrice(40);
 
-	if (taille_ss_espace_krylov > taille_matrice){
-		fprintf(stderr, "Erreur arguments:\n\tUsage : La <taille_ss_espace_krylov>  doit être inférieur ou égale à la <taille_matrice>\n");
-		exit(-1);
-	}
+	// //Check arguments 2
+	// if (taille_ss_espace_krylov > taille_matrice){
+	// 	fprintf(stderr, "Erreur arguments:\n\tUsage : La <taille_ss_espace_krylov> doit être inférieure ou égale à la <taille_matrice>.\n");
+	// 	exit(-1);
+	// }
 
+	//v contiendra l'ensemble des vecteurs v, v[0] renvoie au vecteur v_0 par exemple
+	double* v;
+
+	//w contiendra l'ensemble des vecteurs w
+	double* w;
+
+	//t est la projection de la matrice A, t est de dimension m = taille_ss_espace_krylov
+	double* t;
 
 
 	struct timeval debut_calcul, fin_calcul, duree_calcul;
-
-	//Allocation et initialisation de la matrice à projeter
-	double* A = (double *) malloc (taille_matrice*taille_matrice*sizeof(double));
-	double* v;
-	double* w;
-	double* t;
-
-	int i;
-	for (i = 0; i < taille_matrice*taille_matrice; i++)
-	{
-		A[i] = rand()%80 + 10.;
-	}
-
 	FILE* output = fopen("OUTPUT/temps_execution.txt","a+");
-
 	if(output == NULL){
 		fprintf(stderr, "Erreur d'ouverture du fichier OUTPUT/temps_execution.txt\n");
 		exit(-1);
 	}
 
 	if(taille_matrice <= 10){
+		printf("\n--- Matrice A à projeter ---\n");
 		affiche(A, taille_matrice*taille_matrice, taille_matrice);
-		printf("transposee : \n");
+		printf("\n--- Transposée A^t ---\n");
 		affiche(transposee(A,taille_matrice), taille_matrice*taille_matrice, taille_matrice);
 	}
+
+
+	//Allocations vecteur initiaux
+	v = (double *) malloc ((taille_ss_espace_krylov+2)*taille_matrice*sizeof(double));
+	w = (double *) malloc ((taille_ss_espace_krylov+2)*taille_matrice*sizeof(double));
+
+	//Allocation de la projection de matrice A
+	t = (double *) malloc (taille_ss_espace_krylov*taille_ss_espace_krylov*sizeof(double));
 
 
 	gettimeofday(&debut_calcul, NULL);
 	bi_lanczos(A,taille_ss_espace_krylov, taille_matrice, t, v, w);
 	gettimeofday(&fin_calcul, NULL);
+
+	if (taille_ss_espace_krylov <= 10){
+		printf("\n--- Projection T de la matrice A ---\n");
+		affiche(t, taille_ss_espace_krylov*taille_ss_espace_krylov, taille_ss_espace_krylov);
+	}
+
+	//Mesure du temps d'execution de la projection, et ecriture dans un fichier de sortie utile pour les plots
 	timersub(&fin_calcul, &debut_calcul, &duree_calcul);
 	fprintf(output, "%d %f\n", taille_matrice,
 			(double) (duree_calcul.tv_sec) + (duree_calcul.tv_usec / 1000000.0));
 
+	//Calcul des valeurs/vecteurs propres exacts
+	double *vect_droit = (double *) malloc (taille_matrice*taille_matrice*sizeof(double));
+	double *vect_gauche = (double *) malloc (taille_matrice*taille_matrice*sizeof(double));;
+	double *valeurs_pro_r = (double *) malloc (taille_matrice*sizeof(double));
+	double *valeurs_pro_i = (double *) malloc (taille_matrice*sizeof(double));;
+	
+	calcul_valeurs_propres(A, taille_matrice, valeurs_pro_r, valeurs_pro_i, vect_droit, vect_gauche);
+
+	printf("\n------------------------\n--- RESULTATS EXACTS ---\n------------------------\n");
+	printf("\n---  Valeurs propres parties réelles ---\n");
+	affiche(valeurs_pro_r, taille_matrice, taille_matrice);
+
+	printf("\n---  Valeurs propres parties imaginaires ---\n");
+	affiche(valeurs_pro_i, taille_matrice, taille_matrice);
+
+
+	//Calcul des valeurs/vecteurs propres approchés
+	double *vect_droit_app = (double *) malloc (taille_ss_espace_krylov*taille_ss_espace_krylov*sizeof(double));
+	double *vect_gauche_app = (double *) malloc (taille_ss_espace_krylov*taille_ss_espace_krylov*sizeof(double));;
+	double *valeurs_pro_r_app = (double *) malloc (taille_ss_espace_krylov*sizeof(double));
+	double *valeurs_pro_i_app = (double *) malloc (taille_ss_espace_krylov*sizeof(double));;
+	
+	calcul_valeurs_propres(A, taille_ss_espace_krylov, valeurs_pro_r_app, valeurs_pro_i_app, vect_droit_app, vect_gauche_app);
+
+	printf("\n---------------------------\n--- RESULTATS APPROCHES ---\n---------------------------\n");
+	printf("\n---  Valeurs propres parties réelles ---\n");
+	affiche(valeurs_pro_r_app, taille_ss_espace_krylov, taille_ss_espace_krylov);
+
+	printf("\n---  Valeurs propres parties imaginaires ---\n");
+	affiche(valeurs_pro_i_app, taille_ss_espace_krylov, taille_ss_espace_krylov);
 	return 0;
 }

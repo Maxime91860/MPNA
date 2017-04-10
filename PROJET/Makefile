@@ -3,7 +3,7 @@
 all : code
 
 exec :
-	./CODE/bi_lanczos_seq.pgr 9 5
+	./CODE/bi_lanczos_seq.pgr MATRICES/test2.mtx 5
 
 test :
 	./SCRIPTS_TEST/tests_taille.sh
@@ -19,7 +19,6 @@ visu :
 
 clean_code : 
 	make clean -C CODE
-	rm log.txt
 
 clean_output : 
 	rm -rf OUTPUT/* 

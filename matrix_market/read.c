@@ -24,7 +24,26 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "mmio.h"
+
+//Fonction d'affichage d'un vecteur ou d'une matrice
+void affiche(double* tab, int N, int width){
+
+    int i;
+    printf("(");
+    for(i=0; i<N; i++){
+        if((i+1)%width == 0){
+            printf("%g)\n",tab[i]);
+            if(i != (N-1)){
+                printf("(");
+            }
+        }
+        else{
+            printf("%g ",tab[i]);
+        }
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -98,6 +117,17 @@ int main(int argc, char *argv[])
     mm_write_mtx_crd_size(stdout, M, N, nz);
     for (i=0; i<nz; i++)
         fprintf(stdout, "%d %d %20.19g\n", I[i]+1, J[i]+1, val[i]);
+
+    //Passage de stockage creux à stockage plein
+    double* matrice = (double*) malloc(M * N * sizeof(double));
+    memset(matrice, 0, M * N * sizeof(double));
+    for (i=0; i<nz; i++)
+    {
+        matrice [I[i]*M + J[i]] = val[i];
+    }   
+
+    printf("\n --- TEST STOCKAGE PLEIN ---\n");
+    affiche(matrice, N*M, M);
 
 	return 0;
 }
