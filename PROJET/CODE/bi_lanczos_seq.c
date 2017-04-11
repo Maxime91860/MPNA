@@ -29,6 +29,8 @@ double* lis_matrice (char* file_mtx_name, int* taille_matrice){
     int *J;
     double *val;
 
+
+    fprintf(stderr, "-- Debut lecture matrice %s --\n",file_mtx_name);
     if ((file = fopen(file_mtx_name, "r")) == NULL) 
         exit(1);
 
@@ -77,6 +79,9 @@ double* lis_matrice (char* file_mtx_name, int* taille_matrice){
     	fprintf(stderr, "Erreur : la matrice n'est pas carrée.\n");
     	exit(-1);
     }
+
+    fprintf(stderr, "-- Fin lecture matrice %s --\n",file_mtx_name);
+    fprintf(stderr, "La matrice %s est de dimension %dx%d et a %d élements non-nuls.\n",file_mtx_name, nb_ligne, nb_col, non_zero);
 
     *taille_matrice = nb_ligne;
     return matrice;
@@ -269,6 +274,8 @@ double* produit_matrice_matrice (double* matrice1, double* matrice2, int n1, int
 //	- la projection de la matrice A, dans T
 // V sera la base pour A
 // W sera la base pour la transposée de A, A^t
+// m dimension du sous-espace de krylov
+// n dimension de la matrice
 void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 
 	double alpha;
@@ -288,10 +295,9 @@ void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 	for(i=0; i<n; i++){
 		v[i] = 0; //v_0
 		w[i] = 0; //w_0
-		v[i+n] = rand()%80 + 10.; //v_1
-		w[i+n] = rand()%80 + 10.; //w_1
+		v[i+n] = rand()%10; //v_1
+		w[i+n] = rand()%10; //w_1
 	}
-
 
 	//Pour que le (v_1,w_1) = 1
 	double ps = produit_scalaire(w+n, v+n, n);
@@ -302,7 +308,7 @@ void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 	// affiche(v+n, n, n);
 	// printf("w_1\n");
 	// affiche(w+n, n, n);
-	// printf("w_1.v_1 = %g\n", produit_scalaire(w+n, v+n, n));
+	// printf("w_1.v_1 = %f\n", produit_scalaire(w+n, v+n, n));
 
 	//Initialisation de la matrice T
 	for(i=0; i<m*m; i++){
@@ -310,7 +316,7 @@ void bi_lanczos(double* A, int m, int n, double* t, double *v, double* w){
 	}
 
 	//Check si les vecteurs initiaux respectent la propriété (v_1,w_1) = 1
-	if(produit_scalaire(v+n, w+n, n) != 1.){
+	if(fabs(produit_scalaire(v+n, w+n, n) - 1) > 1.e-5){
 		fprintf(stderr, "Le produit scalaire des vecteurs initiaux doit être égal à 1.\n");
 		exit(-1);
 	}
@@ -390,14 +396,15 @@ int main(int argc, char* argv[]){
 	int taille_matrice = 40;
 
 	//Matrice à projeter
-	// double* A = lis_matrice(argv[1], &taille_matrice);
-	double* A = init_matrice(40);
+	double* A = lis_matrice(argv[1], &taille_matrice); 
+	// double* A = init_matrice(40);
 
-	// //Check arguments 2
-	// if (taille_ss_espace_krylov > taille_matrice){
-	// 	fprintf(stderr, "Erreur arguments:\n\tUsage : La <taille_ss_espace_krylov> doit être inférieure ou égale à la <taille_matrice>.\n");
-	// 	exit(-1);
-	// }
+	//Check arguments 2
+	if (taille_ss_espace_krylov > taille_matrice && taille_matrice > 5){
+		fprintf(stderr, "Erreur arguments:\n\tUsage : La <taille_ss_espace_krylov> doit être inférieure ou égale à la <taille_matrice>.\n");
+		exit(-1);
+	}
+
 
 	//v contiendra l'ensemble des vecteurs v, v[0] renvoie au vecteur v_0 par exemple
 	double* v;
@@ -419,8 +426,8 @@ int main(int argc, char* argv[]){
 	if(taille_matrice <= 10){
 		printf("\n--- Matrice A à projeter ---\n");
 		affiche(A, taille_matrice*taille_matrice, taille_matrice);
-		printf("\n--- Transposée A^t ---\n");
-		affiche(transposee(A,taille_matrice), taille_matrice*taille_matrice, taille_matrice);
+		// printf("\n--- Transposée A^t ---\n");
+		// affiche(transposee(A,taille_matrice), taille_matrice*taille_matrice, taille_matrice);
 	}
 
 
@@ -433,10 +440,11 @@ int main(int argc, char* argv[]){
 
 
 	gettimeofday(&debut_calcul, NULL);
-	bi_lanczos(A,taille_ss_espace_krylov, taille_matrice, t, v, w);
+	if(taille_ss_espace_krylov > 5)
+		bi_lanczos(A,taille_ss_espace_krylov, taille_matrice, t, v, w);
 	gettimeofday(&fin_calcul, NULL);
 
-	if (taille_ss_espace_krylov <= 10){
+	if (taille_ss_espace_krylov <= 10 && taille_ss_espace_krylov < taille_matrice){
 		printf("\n--- Projection T de la matrice A ---\n");
 		affiche(t, taille_ss_espace_krylov*taille_ss_espace_krylov, taille_ss_espace_krylov);
 	}
@@ -454,13 +462,6 @@ int main(int argc, char* argv[]){
 	
 	calcul_valeurs_propres(A, taille_matrice, valeurs_pro_r, valeurs_pro_i, vect_droit, vect_gauche);
 
-	printf("\n------------------------\n--- RESULTATS EXACTS ---\n------------------------\n");
-	printf("\n---  Valeurs propres parties réelles ---\n");
-	affiche(valeurs_pro_r, taille_matrice, taille_matrice);
-
-	printf("\n---  Valeurs propres parties imaginaires ---\n");
-	affiche(valeurs_pro_i, taille_matrice, taille_matrice);
-
 
 	//Calcul des valeurs/vecteurs propres approchés
 	double *vect_droit_app = (double *) malloc (taille_ss_espace_krylov*taille_ss_espace_krylov*sizeof(double));
@@ -468,13 +469,48 @@ int main(int argc, char* argv[]){
 	double *valeurs_pro_r_app = (double *) malloc (taille_ss_espace_krylov*sizeof(double));
 	double *valeurs_pro_i_app = (double *) malloc (taille_ss_espace_krylov*sizeof(double));;
 	
-	calcul_valeurs_propres(A, taille_ss_espace_krylov, valeurs_pro_r_app, valeurs_pro_i_app, vect_droit_app, vect_gauche_app);
+	calcul_valeurs_propres(t, taille_ss_espace_krylov, valeurs_pro_r_app, valeurs_pro_i_app, vect_droit_app, vect_gauche_app);
 
-	printf("\n---------------------------\n--- RESULTATS APPROCHES ---\n---------------------------\n");
+	
+	//v+taille_matrice pour ne pas prendre en compte le v_0
+	// vect_droit_app = produit_matrice_vecteur(v+taille_matrice, vect_droit_app, taille_matrice, taille_ss_espace_krylov);
+	// vect_gauche_app = produit_matrice_vecteur(w+taille_matrice, vect_gauche_app, taille_matrice, taille_ss_espace_krylov);
+
+
+
+	if (taille_matrice > taille_ss_espace_krylov)
+		taille_matrice = taille_ss_espace_krylov;
+
+
+
+	printf("\n----------------------------------------------------\n--- CALCULS DES VALEURS PROPRES SUR LA MATRICE A ---\n----------------------------------------------------\n");
 	printf("\n---  Valeurs propres parties réelles ---\n");
-	affiche(valeurs_pro_r_app, taille_ss_espace_krylov, taille_ss_espace_krylov);
+	affiche(valeurs_pro_r, taille_matrice, taille_matrice);
 
 	printf("\n---  Valeurs propres parties imaginaires ---\n");
-	affiche(valeurs_pro_i_app, taille_ss_espace_krylov, taille_ss_espace_krylov);
+	affiche(valeurs_pro_i, taille_matrice, taille_matrice);
+
+	// printf("\n--- Vecteurs propres droits (ROW-MAJOR) ---\n");
+	// affiche(vect_droit, taille_matrice * taille_matrice, taille_matrice);
+
+	// printf("\n--- Vecteurs propres gauches (ROW-MAJOR) ---\n");
+	// affiche(vect_gauche, taille_matrice * taille_matrice, taille_matrice);
+
+
+	//Le if pour le cas où on n'effectue pas la projection.
+	if(taille_ss_espace_krylov <= taille_matrice){
+		printf("\n-------------------------------------------------------\n--- CALCULS DES VALEURS PROPRES SUR LA PROJECTION T ---\n-------------------------------------------------------\n");
+		printf("\n---  Valeurs propres parties réelles ---\n");
+		affiche(valeurs_pro_r_app, taille_ss_espace_krylov, taille_ss_espace_krylov);
+
+		printf("\n---  Valeurs propres parties imaginaires ---\n");
+		affiche(valeurs_pro_i_app, taille_ss_espace_krylov, taille_ss_espace_krylov);
+
+		// printf("\n--- Vecteurs propres droits (ROW-MAJOR) ---\n");
+		// affiche(vect_droit_app, taille_matrice * taille_matrice, taille_matrice);
+
+		// printf("\n--- Vecteurs propres gauches (ROW-MAJOR) ---\n");
+		// affiche(vect_gauche_app, taille_matrice * taille_matrice, taille_matrice);
+	}
 	return 0;
 }

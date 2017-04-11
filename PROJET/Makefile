@@ -2,14 +2,20 @@
 
 all : code
 
-exec :
-	./CODE/bi_lanczos_seq.pgr MATRICES/test2.mtx 5
-
-test :
-	./SCRIPTS_TEST/tests_taille.sh
-
 code : 
 	make -C CODE	
+
+exemple : code
+	./CODE/bi_lanczos_seq.pgr MATRICES/bp_400.mtx 10
+
+clean : 
+	make clean -C CODE
+
+
+
+# Pour le tracer des courbes
+test :
+	./SCRIPTS_TEST/tests_taille.sh
 
 plot :
 	gnuplot SCRIPTS_VISU/*
@@ -17,13 +23,8 @@ plot :
 visu :
 	evince PLOT/*
 
-clean_code : 
-	make clean -C CODE
-
-clean_output : 
-	rm -rf OUTPUT/* 
-
 clean_plot :
 	rm -rf PLOT/* 
 
-clean : clean_code
+clean_output : 
+	rm -rf OUTPUT/* 
