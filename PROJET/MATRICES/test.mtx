@@ -1,15 +1,11 @@
 %%MatrixMarket matrix coordinate real general
 % 
-%	Test MPNA
-%
-10 10 10
-1 1  8
-2 2  2
-3 3  3
-4 4  5
-5 5  4
-6 6  0
-7 7  4
-8 8  3
-9 9  1
-10 10 5
+%	Matrice test MPNA
+%	uel.unisciel.fr/physique/outils_nancy/outils_nancy_ch11/co/apprendre_ch11_20.html
+%	ses valeurs propres : 2 et -1
+%	ses vecteurs propres : (1,2) (1,1)
+2 2 4
+1 1  5
+1 2  -3
+2 1  6
+2 2  -4
