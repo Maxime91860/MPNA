@@ -1,4 +1,7 @@
 
+
+Bibliothèques à installer : liblapack-dev liblapack3 libopenblas-base libopenblas-dev (libatlas-dev)
+
 Se placer dans le répertoire courant de ce README.
 
 
